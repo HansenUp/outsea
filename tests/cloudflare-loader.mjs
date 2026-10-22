@@ -1,0 +1,2 @@
+import {existsSync} from 'node:fs';
+export async function resolve(specifier,context,next){if(specifier==='cloudflare:workers')return{url:new URL('./mock-env.mjs',import.meta.url).href,shortCircuit:true};if(specifier.startsWith('.')&&!/\.[a-z]+$/.test(specifier)&&context.parentURL){const u=new URL(specifier+'.ts',context.parentURL);if(existsSync(u))return{url:u.href,shortCircuit:true};}return next(specifier,context);}

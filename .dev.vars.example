@@ -1,0 +1,11 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+# Easiest: run `node scripts/create-accounts.mjs`, which generates both values
+# (and writes the generated passwords to the git-ignored outputs/accounts.md).
+
+# Random string, at least 32 characters. Also derives the key that encrypts
+# provider/mail settings stored in D1; changing it makes those unreadable.
+SESSION_SECRET='replace-with-a-long-random-string'
+
+# JSON array of bootstrap users. "password" must be "salt:pbkdf2-sha256-hex"
+# (100000 iterations, 32-byte key), NOT a plain password.
+BOOTSTRAP_ACCOUNTS='[{"id":"replace-with-uuid","username":"admin","name":"Admin","role":"admin","password":"<salt>:<pbkdf2-hex>"}]'

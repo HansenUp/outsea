@@ -1,0 +1,38 @@
+# dependencies
+/node_modules
+
+# build output
+/dist/
+/.next/
+/.vinext/
+/out/
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# local Cloudflare state (D1/R2 emulation, logs)
+/.wrangler/
+
+# secrets & generated credentials — never commit
+/.dev.vars*
+!/.dev.vars.example
+.env*
+!.env.example
+*.pem
+/outputs/
+
+# local data
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# tool / OS noise
+.DS_Store
+/.sites-runtime/
+/.agents/
+/.codex/
+/work/
+npm-debug.log*
+
+# project-local npm cache used during release verification
+/.npm-cache/

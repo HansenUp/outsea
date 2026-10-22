@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {inspectMedia} from '../lib/outsea/media.ts';
+import {passwordHash,verify,crypt} from '../lib/outsea/security.ts';
+import {makeZip} from '../lib/outsea/zip.ts';
+const box=(name:string,bytes:Uint8Array)=>{const b=new Uint8Array(bytes.length+8);new DataView(b.buffer).setUint32(0,b.length);b.set(new TextEncoder().encode(name),4);b.set(bytes,8);return b;};
+const join=(...xs:Uint8Array[])=>{const out=new Uint8Array(xs.reduce((a,b)=>a+b.length,0));let n=0;for(const x of xs){out.set(x,n);n+=x.length;}return out;};
+function mp4(duration:number,track=duration){function time(d:number){const b=new Uint8Array(24),v=new DataView(b.buffer);v.setUint32(12,1000);v.setUint32(16,d*1000);return b;}return join(box('ftyp',new Uint8Array(16)),box('moov',join(box('mvhd',time(duration)),box('trak',box('mdia',box('mdhd',time(track)))))),box('mdat',new Uint8Array(10)));}
+test('accept exactly five seconds, reject >5 and conflicting long track metadata',()=>{assert.equal(inspectMedia(mp4(5)).duration,5);assert.throws(()=>inspectMedia(mp4(5.001)),/最长 5 秒/);assert.throws(()=>inspectMedia(mp4(4,10)),/最长 5 秒/);});
+test('reject fake media, fragments and corrupt boxes',()=>{assert.throws(()=>inspectMedia(new TextEncoder().encode('<script>alert(1)</script>')));assert.throws(()=>inspectMedia(join(mp4(4),box('moof',new Uint8Array(1)))));const bad=mp4(4);new DataView(bad.buffer).setUint32(0,999999);assert.throws(()=>inspectMedia(bad));});
+test('PNG checks dimensions and limits',()=>{const p=new Uint8Array(32);p.set([137,80,78,71,13,10,26,10]);const v=new DataView(p.buffer);v.setUint32(16,1200);v.setUint32(20,800);assert.equal(inspectMedia(p).kind,'image');v.setUint32(16,5000);assert.throws(()=>inspectMedia(p),/4000/);});
+test('salted passwords and encrypted provider configuration roundtrip',async()=>{const stored=await passwordHash('Strong!Password123');assert.equal(await verify('Strong!Password123',stored),true);assert.equal(await verify('wrong',stored),false);assert.notEqual(await passwordHash('Strong!Password123'),stored);const cipher=await crypt('private-key','session-secret');assert.equal(await crypt(cipher,'session-secret',true),'private-key');await assert.rejects(()=>crypt(cipher,'wrong-secret',true));});
+test('ZIP contains expected local, central and end signatures',async()=>{const b=makeZip([{name:'en/test.txt',bytes:new TextEncoder().encode('hello')}]);const bytes=new Uint8Array(await b.arrayBuffer()),v=new DataView(bytes.buffer);assert.equal(v.getUint32(0,true),0x04034b50);assert.equal(v.getUint32(bytes.length-22,true),0x06054b50);assert.equal(v.getUint16(bytes.length-12,true),1);});

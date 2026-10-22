@@ -1,0 +1,11 @@
+name = "sailingo-pilot-scheduler"
+main = "worker.mjs"
+compatibility_date = "2026-10-01"
+[triggers]
+crons = ["* * * * *"]
+[vars]
+SITE_URL = "https://example.invalid"
+[[kv_namespaces]]
+binding = "STATUS_KV"
+id = "REPLACE_WITH_OWNER_KV_NAMESPACE_ID"
+# Secrets: MAINTENANCE_TOKEN, ALERT_WEBHOOK (optional HTTPS receiver)
